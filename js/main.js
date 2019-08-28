@@ -69,7 +69,7 @@ function drawFace(x, y) {
   var noseLength = Math.random() * 2 + 2;
   var noseSkew = Math.random() * width / 3 - width / 6;
   var noseBase = Math.floor(Math.random() * 4); // boolean
-  var noseSpacing = height / noseLength;
+  var noseSpacing = height / noseLength * (0.5 + Math.random() * 0.5);
 
   // mouth
   var mouthWidth = width / 8 + Math.random() * width / 4;
@@ -84,7 +84,7 @@ function drawFace(x, y) {
   drawEllipse(x, y, width, height, "white");
 
   // features
-  drawNose(eyeLine, noseLength, noseSkew, noseBase, noseSpacing, x, y);
+  drawNose(y - 2.5 * noseLength, noseLength, noseSkew, noseBase, noseSpacing, x, y);
   drawEyes(eyeLine, eyeSize, eyeSpacing, eyeSkew, pupilSize, x, y);
   drawMouth(mouthLine, mouthWidth, mouthHeight, x, y);
 }
