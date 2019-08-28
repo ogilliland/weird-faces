@@ -25,7 +25,7 @@ function init() {
   paper.setup(canvas);
   resize();
 
-  for(var i = 0; i < COLS; i++) {
+  for (var i = 0; i < COLS; i++) {
     for (var j = 0; j < ROWS; j++) {
       drawFace((i + 0.5) * COL_WIDTH, (j + 0.5) * ROW_HEIGHT);
     }
@@ -49,16 +49,33 @@ function drawFace(x, y) {
   var height = (FACE_HEIGHT_BASE + FACE_HEIGHT_VAR * Math.random()) * ROW_HEIGHT / 400;
 
   drawEllipse(x, y, width, height);
+  drawEyes(x, y, width, height);
 }
 
-function drawEllipse(x, y, width, height) {
+function drawEyes(x, y, faceWidth, faceHeight) {
+  var eyeLine = y - Math.random() * faceHeight;
+  var eyeSize = faceWidth / 8 + Math.random() * faceWidth / 8;
+  var eyeSpacing = faceWidth + Math.random() * faceWidth;
+  var eyeSkew = Math.random() * faceHeight / 4 - faceHeight / 8;
+  var pupilSize = 0.25 + Math.random() * 0.5; // percent as decimal
+
+  // outlines
+  drawEllipse(x - eyeSpacing / 2, eyeLine + eyeSkew, eyeSize, eyeSize);
+  drawEllipse(x + eyeSpacing / 2, eyeLine - eyeSkew, eyeSize, eyeSize);
+
+  // pupils
+  drawEllipse(x - eyeSpacing / 2, eyeLine + eyeSkew, eyeSize * pupilSize, eyeSize * pupilSize, true);
+  drawEllipse(x + eyeSpacing / 2, eyeLine - eyeSkew, eyeSize * pupilSize, eyeSize * pupilSize, true);
+}
+
+function drawEllipse(x, y, width, height, fill) {
   var points = POINTS_BASE + POINTS_VAR * Math.random();
   var center = new paper.Point(x, y);
 
   var path = new paper.Path();
   path.closed = true;
 
-  for(var i = 0; i < points; i++) {
+  for (var i = 0; i < points; i++) {
     var angle = i * 2 * Math.PI / (points + 0.5);
     var radius = height * width / Math.sqrt(
       Math.pow(0.5 * height * Math.cos(angle), 2) +
@@ -76,4 +93,8 @@ function drawEllipse(x, y, width, height) {
   path.smooth();
   path.strokeColor = 'black';
   path.strokeWidth = 2;
+
+  if (fill) {
+    path.fillColor = 'black';
+  }
 }
