@@ -48,15 +48,14 @@ function drawFace(x, y) {
   var width = (FACE_WIDTH_BASE + FACE_WIDTH_VAR * Math.random()) * COL_WIDTH / 400;
   var height = (FACE_HEIGHT_BASE + FACE_HEIGHT_VAR * Math.random()) * ROW_HEIGHT / 400;
 
+  // face shape
   drawEllipse(x, y, width, height);
-  drawEyes(x, y, width, height);
-}
 
-function drawEyes(x, y, faceWidth, faceHeight) {
-  var eyeLine = y - Math.random() * faceHeight;
-  var eyeSize = faceWidth / 8 + Math.random() * faceWidth / 8;
-  var eyeSpacing = faceWidth + Math.random() * faceWidth;
-  var eyeSkew = Math.random() * faceHeight / 4 - faceHeight / 8;
+  // eyes
+  var eyeLine = y - Math.random() * height;
+  var eyeSize = width / 8 + Math.random() * width / 8;
+  var eyeSpacing = width + Math.random() * width;
+  var eyeSkew = Math.random() * height / 4 - height / 8;
   var pupilSize = 0.25 + Math.random() * 0.5; // percent as decimal
 
   // outlines
@@ -66,6 +65,33 @@ function drawEyes(x, y, faceWidth, faceHeight) {
   // pupils
   drawEllipse(x - eyeSpacing / 2, eyeLine + eyeSkew, eyeSize * pupilSize, eyeSize * pupilSize, true);
   drawEllipse(x + eyeSpacing / 2, eyeLine - eyeSkew, eyeSize * pupilSize, eyeSize * pupilSize, true);
+
+  // nose
+  var noseLength = Math.random() * 4 + 2;
+  var noseSkew = Math.random() * width / 2 - width / 4;
+  var noseBase = Math.floor(Math.random() * 4); // boolean
+
+  var nose = new paper.Path();
+
+  for (var i = 0; i < noseLength; i++) {
+    var dx = x + noseSkew * 2 * (1 + Math.random() * ROUGHNESS / 100 - ROUGHNESS / 200);
+    var dy = eyeLine + i * height / 4;
+
+    var delta = new paper.Point(dx, dy);
+    nose.add(delta);
+  }
+
+  if(noseBase > 0) {
+    var dx = x + -1 * noseSkew;
+    var dy = eyeLine + noseLength * height / 4;
+
+    var delta = new paper.Point(dx, dy);
+    nose.add(delta);
+  }
+
+  nose.smooth();
+  nose.strokeColor = 'black';
+  nose.strokeWidth = 2;
 }
 
 function drawEllipse(x, y, width, height, fill) {
