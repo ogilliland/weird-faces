@@ -3,21 +3,23 @@ var canvas, paper;
 var WIDTH = 1000;
 var HEIGHT = 1000;
 
-var ROWS = 5;
-var COLS = 5;
+var ROWS = 6;
+var COLS = 8;
+
+var LINE_WIDTH = 1;
 
 var ROW_HEIGHT = HEIGHT / ROWS;
 var COL_WIDTH = WIDTH / COLS;
 
-var FACE_WIDTH_BASE = 50; // percent
-var FACE_WIDTH_VAR = 25; // percent
+var FACE_WIDTH_BASE = 60; // percent
+var FACE_WIDTH_VAR = 15; // percent
 var FACE_HEIGHT_BASE = 50; // percent
 var FACE_HEIGHT_VAR = 25; // percent
 
 var POINTS_BASE = 8;
 var POINTS_VAR = 2;
 
-var ROUGHNESS = 25; // percent
+var ROUGHNESS = 15; // percent
 
 function init() {
   canvas = document.getElementById("canvas");
@@ -64,10 +66,10 @@ function drawFace(x, y) {
   var pupilSize = 0.25 + Math.random() * 0.5; // percent as decimal
 
   // nose
-  var noseLength = Math.random() * 4 + 2;
-  var noseSkew = Math.random() * width / 2 - width / 4;
+  var noseLength = Math.random() * 2 + 2;
+  var noseSkew = Math.random() * width / 3 - width / 6;
   var noseBase = Math.floor(Math.random() * 4); // boolean
-  var noseSpacing = height / 4;
+  var noseSpacing = height / noseLength;
 
   // mouth
   var mouthWidth = width / 8 + Math.random() * width / 4;
@@ -118,13 +120,17 @@ function drawNose(eyeLine, noseLength, noseSkew, noseBase, noseSpacing, x, y) {
 
   nose.smooth();
   nose.strokeColor = "black";
-  nose.strokeWidth = 2;
+  nose.strokeWidth = LINE_WIDTH;
 }
 
 function drawEars(earLine, earSpacing, earWidth, earHeight, x, y) {
   // outlines
   drawEllipse(x - earSpacing, earLine, earWidth, earHeight, "white");
   drawEllipse(x + earSpacing, earLine, earWidth, earHeight, "white");
+
+  // detail
+  drawEllipse(x - earSpacing, earLine, earWidth / 2, earHeight / 2);
+  drawEllipse(x + earSpacing, earLine, earWidth / 2, earHeight / 2);
 }
 
 function drawMouth(mouthLine, mouthWidth, mouthHeight, x, y) {
@@ -156,7 +162,7 @@ function drawEllipse(x, y, width, height, fill) {
 
   path.smooth();
   path.strokeColor = "black";
-  path.strokeWidth = 2;
+  path.strokeWidth = LINE_WIDTH;
 
   if (fill !== undefined) {
     path.fillColor = fill;
@@ -178,5 +184,5 @@ function drawLine(x1, y1, x2, y2) {
 
   path.smooth();
   path.strokeColor = "black";
-  path.strokeWidth = 2;
+  path.strokeWidth = LINE_WIDTH;
 }
