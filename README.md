@@ -1,2 +1,2 @@
-# javascript-boilerplate
-Template for generating simple Javascript experiments
+# weird-faces
+Replicating a sketchy drawing style programatically
