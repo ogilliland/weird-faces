@@ -6,30 +6,41 @@ var HEIGHT = 1000;
 var ROWS = 6;
 var COLS = 8;
 
-var LINE_WIDTH = 1;
-
 var ROW_HEIGHT = HEIGHT / ROWS;
 var COL_WIDTH = WIDTH / COLS;
 
-var FACE_WIDTH_BASE = 60; // percent
-var FACE_WIDTH_VAR = 15; // percent
-var FACE_HEIGHT_BASE = 50; // percent
-var FACE_HEIGHT_VAR = 25; // percent
+var CONFIG = {
+  face: {
+    widthBase: 60, // percent
+    widthVar: 15, // percent
+    heightBase: 50, // percent
+    heightVar: 25 // percent
+  },
+  ellipse: {
+    pointsBase: 8,
+    pointsVar: 2,
+    roughness: 15 // percent
+  },
+  line: {
+    pointsBase: 4,
+    pointsVar: 2,
+    roughness: 15, // percent
+    strokeWidth: 1 // px
+  }
+};
 
-var POINTS_BASE = 8;
-var POINTS_VAR = 2;
-
-var ROUGHNESS = 15; // percent
+var FACES = [];
 
 function init() {
   canvas = document.getElementById("canvas");
-	
+  
   paper.setup(canvas);
   resize();
 
   for (var i = 0; i < COLS; i++) {
     for (var j = 0; j < ROWS; j++) {
-      drawFace((i + 0.5) * COL_WIDTH, (j + 0.5) * ROW_HEIGHT);
+      // drawFace((i + 0.5) * COL_WIDTH, (j + 0.5) * ROW_HEIGHT);
+      FACES.push(new Face((i + 0.5) * COL_WIDTH, (j + 0.5) * ROW_HEIGHT));
     }
   }
   
@@ -46,73 +57,114 @@ function resize() {
   paper.view.setViewSize(new paper.Size(WIDTH, HEIGHT));
 }
 
-function drawFace(x, y) {
-  /* === properties === */
-  // face
-  var width = (FACE_WIDTH_BASE + FACE_WIDTH_VAR * Math.random()) * COL_WIDTH / 400;
-  var height = (FACE_HEIGHT_BASE + FACE_HEIGHT_VAR * Math.random()) * ROW_HEIGHT / 400;
-
-  // ears
-  var earLine = y - Math.random() * height / 4;
-  var earHeight = (FACE_HEIGHT_BASE + FACE_HEIGHT_VAR * Math.random()) * ROW_HEIGHT / 1200;
-  var earWidth = (FACE_WIDTH_BASE + FACE_WIDTH_VAR * Math.random()) * COL_WIDTH / 1400;
-  var earSpacing = width + earWidth * 2;
-
-  // eyes
-  var eyeLine = y - Math.random() * height;
-  var eyeSize = width / 8 + Math.random() * width / 8;
-  var eyeSpacing = width + Math.random() * width;
-  var eyeSkew = Math.random() * height / 4 - height / 8;
-  var pupilSize = 0.25 + Math.random() * 0.5; // percent as decimal
-
-  // nose
-  var noseLength = Math.random() * 2 + 2;
-  var noseSkew = Math.random() * width / 3 - width / 6;
-  var noseBase = Math.floor(Math.random() * 4); // boolean
-  var noseSpacing = height / noseLength * (0.5 + Math.random() * 0.5);
-
-  // mouth
-  var mouthWidth = width / 8 + Math.random() * width / 4;
-  var mouthHeight = mouthWidth / 8 + Math.random() * mouthWidth / 8;
-  var mouthLine = y + height;
-
-  /* === draw === */
-  // ears
-  drawEars(earLine, earSpacing, earWidth, earHeight, x, y);
-
-  // face outline
-  drawEllipse(x, y, width, height, "white");
-
-  // features
-  drawNose(y - 2.5 * noseLength, noseLength, noseSkew, noseBase, noseSpacing, x, y);
-  drawEyes(eyeLine, eyeSize, eyeSpacing, eyeSkew, pupilSize, x, y);
-  drawMouth(mouthLine, mouthWidth, mouthHeight, x, y);
+/* === object definitions === */
+function Face(x, y) {
+  this.x = x;
+  this.y = y;
+  this.width = (CONFIG.face.widthBase + CONFIG.face.widthVar * Math.random()) * COL_WIDTH / 400;
+  this.height = (CONFIG.face.heightBase + CONFIG.face.heightVar * Math.random()) * ROW_HEIGHT / 400;
+  
+  this.group = new paper.Group();
+  this.features = {};
+  this.generate();
+  this.draw();
 }
 
-function drawEyes(eyeLine, eyeSize, eyeSpacing, eyeSkew, pupilSize, x, y) {
+Face.prototype.generate = function() {
+  this.generateEyes();
+  this.generateNose();
+  this.generateMouth();
+  this.generateEars();
+}
+
+Face.prototype.draw = function() {
+  this.group.removeChildren(); // clear before re-drawing
+  this.drawEars();
+  this.drawHead(); // head covers ears
+  this.drawNose();
+  this.drawEyes(); // eyes cover nose
+  this.drawMouth();
+}
+
+Face.prototype.drawHead = function() {
+  this.group.addChild(
+    drawEllipse(this.x, this.y, this.width, this.height, "white")
+  );
+}
+
+Face.prototype.generateEyes = function() {
+  this.features.eyes = {};
+  this.features.eyes.yPos = this.y - Math.random() * this.height;
+  this.features.eyes.size = this.width / 8 + Math.random() * this.width / 8;
+  this.features.eyes.spacing = this.width + Math.random() * this.width;
+  this.features.eyes.skew = Math.random() * this.height / 4 - this.height / 8;
+  this.features.eyes.pupilSize = 0.25 + Math.random() * 0.5; // percent as decimal
+}
+
+Face.prototype.drawEyes = function() {
   // outlines
-  drawEllipse(x - eyeSpacing / 2, eyeLine + eyeSkew, eyeSize, eyeSize, "white");
-  drawEllipse(x + eyeSpacing / 2, eyeLine - eyeSkew, eyeSize, eyeSize, "white");
+  this.group.addChild(
+      drawEllipse(
+      this.x - this.features.eyes.spacing / 2,
+      this.features.eyes.yPos + this.features.eyes.skew,
+      this.features.eyes.size,
+      this.features.eyes.size,
+      "white"
+    )
+  );
+  this.group.addChild(
+    drawEllipse(
+      this.x + this.features.eyes.spacing / 2,
+      this.features.eyes.yPos - this.features.eyes.skew,
+      this.features.eyes.size,
+      this.features.eyes.size,
+      "white"
+    )
+  );
 
   // pupils
-  drawEllipse(x - eyeSpacing / 2, eyeLine + eyeSkew, eyeSize * pupilSize, eyeSize * pupilSize, "black");
-  drawEllipse(x + eyeSpacing / 2, eyeLine - eyeSkew, eyeSize * pupilSize, eyeSize * pupilSize, "black");
+  this.group.addChild(
+    drawEllipse(
+      this.x - this.features.eyes.spacing / 2,
+      this.features.eyes.yPos + this.features.eyes.skew,
+      this.features.eyes.size * this.features.eyes.pupilSize,
+      this.features.eyes.size * this.features.eyes.pupilSize,
+      "black"
+    )
+  );
+  this.group.addChild(
+    drawEllipse(
+      this.x + this.features.eyes.spacing / 2,
+      this.features.eyes.yPos - this.features.eyes.skew,
+      this.features.eyes.size * this.features.eyes.pupilSize,
+      this.features.eyes.size * this.features.eyes.pupilSize,
+      "black"
+    )
+  );
 }
 
-function drawNose(eyeLine, noseLength, noseSkew, noseBase, noseSpacing, x, y) {
+Face.prototype.generateNose = function() {
+  this.features.nose = {};
+  this.features.nose.length = Math.random() * 2 + 2;
+  this.features.nose.skew = Math.random() * this.width / 3 - this.width / 6;
+  this.features.nose.base = Math.floor(Math.random() * 4); // boolean // TO DO - rename to nose.type
+  this.features.nose.spacing = this.height / this.features.nose.length * (0.5 + Math.random() * 0.5); // length of each line segment
+}
+
+Face.prototype.drawNose = function() {
   var nose = new paper.Path();
 
-  for (var i = 0; i < noseLength; i++) {
-    var dx = x + noseSkew * 2 * (1 + Math.random() * ROUGHNESS / 100 - ROUGHNESS / 200);
-    var dy = eyeLine + i * noseSpacing;
+  for (var i = 0; i < this.features.nose.length; i++) {
+    var dx = this.x + this.features.nose.skew * 2 * (1 + Math.random() * CONFIG.ellipse.roughness / 100 - CONFIG.ellipse.roughness / 200);
+    var dy = this.features.eyes.yPos + i * this.features.nose.spacing;
 
     var delta = new paper.Point(dx, dy);
     nose.add(delta);
   }
 
-  if(noseBase > 0) {
-    var dx = x + -1 * noseSkew;
-    var dy = eyeLine + noseLength * noseSpacing;
+  if(this.features.nose.base > 0) {
+    var dx = this.x + -1 * this.features.nose.skew;
+    var dy = this.features.eyes.yPos + this.features.nose.length * this.features.nose.spacing;
 
     var delta = new paper.Point(dx, dy);
     nose.add(delta);
@@ -120,26 +172,89 @@ function drawNose(eyeLine, noseLength, noseSkew, noseBase, noseSpacing, x, y) {
 
   nose.smooth();
   nose.strokeColor = "black";
-  nose.strokeWidth = LINE_WIDTH;
+  nose.strokeWidth = CONFIG.line.strokeWidth;
+
+  this.group.addChild(nose);
 }
 
-function drawEars(earLine, earSpacing, earWidth, earHeight, x, y) {
+Face.prototype.generateMouth = function() {
+  this.features.mouth = {};
+  this.features.mouth.yPos = this.y + this.height;
+  this.features.mouth.width = this.width / 8 + Math.random() * this.width / 4;
+  this.features.mouth.height = this.features.mouth.width / 8 + Math.random() * this.features.mouth.width / 8;
+}
+
+Face.prototype.drawMouth = function() {
+  this.group.addChild(
+    drawEllipse(
+      this.x - this.features.mouth.width / 2,
+      this.features.mouth.yPos,
+      this.features.mouth.width,
+      this.features.mouth.height,
+      "white"
+    )
+  );
+  this.group.addChild(
+    drawLine(
+      this.x - this.features.mouth.width,
+      this.features.mouth.yPos,
+      this.x + this.features.mouth.width,
+      this.features.mouth.yPos
+    )
+  );
+}
+
+Face.prototype.generateEars = function() {
+  this.features.ears = {};
+  this.features.ears.yPos = this.y - Math.random() * this.height / 4;
+  this.features.ears.height = (CONFIG.face.heightBase + CONFIG.face.heightVar * Math.random()) * ROW_HEIGHT / 1200;
+  this.features.ears.width = (CONFIG.face.widthBase + CONFIG.face.widthVar * Math.random()) * COL_WIDTH / 1400;
+  this.features.ears.spacing = this.width + this.features.ears.width * 2;
+}
+
+Face.prototype.drawEars = function() {
   // outlines
-  drawEllipse(x - earSpacing, earLine, earWidth, earHeight, "white");
-  drawEllipse(x + earSpacing, earLine, earWidth, earHeight, "white");
+  this.group.addChild(
+    drawEllipse(
+      this.x - this.features.ears.spacing,
+      this.features.ears.yPos,
+      this.features.ears.width,
+      this.features.ears.height,
+      "white"
+    )
+  );
+  this.group.addChild(
+    drawEllipse(
+      this.x + this.features.ears.spacing,
+      this.features.ears.yPos,
+      this.features.ears.width,
+      this.features.ears.height,
+      "white"
+    )
+  );
 
   // detail
-  drawEllipse(x - earSpacing, earLine, earWidth / 2, earHeight / 2);
-  drawEllipse(x + earSpacing, earLine, earWidth / 2, earHeight / 2);
+  this.group.addChild(
+    drawEllipse(
+      this.x - this.features.ears.spacing,
+      this.features.ears.yPos,
+      this.features.ears.width / 2,
+      this.features.ears.height / 2
+    )
+  );
+  this.group.addChild(
+    drawEllipse(
+      this.x + this.features.ears.spacing,
+      this.features.ears.yPos,
+      this.features.ears.width / 2,
+      this.features.ears.height / 2
+    )
+  );
 }
 
-function drawMouth(mouthLine, mouthWidth, mouthHeight, x, y) {
-  drawEllipse(x - mouthWidth / 2, mouthLine, mouthWidth, mouthHeight, "white");
-  drawLine(x - mouthWidth, mouthLine, x + mouthWidth, mouthLine);
-}
-
+/* === utility functions === */
 function drawEllipse(x, y, width, height, fill) {
-  var points = POINTS_BASE + POINTS_VAR * Math.random();
+  var points = CONFIG.ellipse.pointsBase + CONFIG.ellipse.pointsVar * Math.random();
   var center = new paper.Point(x, y);
 
   var path = new paper.Path();
@@ -153,7 +268,7 @@ function drawEllipse(x, y, width, height, fill) {
     );
 
     var delta = new paper.Point({
-      length: radius * (1 + Math.random() * ROUGHNESS / 100 - ROUGHNESS / 200),
+      length: radius * (1 + Math.random() * CONFIG.ellipse.roughness / 100 - CONFIG.ellipse.roughness / 200),
       angle: angle * 180 / Math.PI
     });
 
@@ -162,21 +277,23 @@ function drawEllipse(x, y, width, height, fill) {
 
   path.smooth();
   path.strokeColor = "black";
-  path.strokeWidth = LINE_WIDTH;
+  path.strokeWidth = CONFIG.line.strokeWidth;
 
   if (fill !== undefined) {
     path.fillColor = fill;
   }
+
+  return path;
 }
 
 function drawLine(x1, y1, x2, y2) {
-  var points = POINTS_BASE + POINTS_VAR * Math.random();
+  var points = CONFIG.line.pointsBase + CONFIG.line.pointsVar * Math.random();
 
   var path = new paper.Path();
 
   for (var i = 0; i < points; i++) {
-    var dx = (x1 + (x2 - x1) * i / points) * (1 + Math.random() * ROUGHNESS / 5000 - ROUGHNESS / 10000);
-    var dy = (y1 + (y2 - y1) * i / points) * (1 + Math.random() * ROUGHNESS / 5000 - ROUGHNESS / 10000);
+    var dx = (x1 + (x2 - x1) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 5000 - CONFIG.line.roughness / 10000); // TO DO - fix these ratios
+    var dy = (y1 + (y2 - y1) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 5000 - CONFIG.line.roughness / 10000); // ***
 
     var delta = new paper.Point(dx, dy);
     path.add(delta);
@@ -184,5 +301,7 @@ function drawLine(x1, y1, x2, y2) {
 
   path.smooth();
   path.strokeColor = "black";
-  path.strokeWidth = LINE_WIDTH;
+  path.strokeWidth = CONFIG.line.strokeWidth;
+
+  return path;
 }
