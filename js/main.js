@@ -93,53 +93,140 @@ Face.prototype.drawHead = function() {
 
 Face.prototype.generateEyes = function() {
   this.features.eyes = {};
+  var rnd = Math.random();
+  if (rnd > 0.95) {
+    this.features.eyes.type = 3; // deadeye
+  } else if (rnd > 0.9) {
+    this.features.eyes.type = 2; // hollow
+  } else if (rnd > 0.7) {
+    this.features.eyes.type = 1; // closed
+  } else {
+    this.features.eyes.type = 0; // open
+  }
   this.features.eyes.yPos = this.y - Math.random() * this.height;
   this.features.eyes.size = this.width / 8 + Math.random() * this.width / 8;
   this.features.eyes.spacing = this.width * 1.25 + Math.random() * this.width;
   this.features.eyes.skew = Math.random() * this.height / 4 - this.height / 8;
-  this.features.eyes.pupilSize = 0.25 + Math.random() * 0.5; // percent as decimal
+  this.features.eyes.pupilSize = 0.25 + Math.random() * 0.25; // percent as decimal
 }
 
 Face.prototype.drawEyes = function() {
-  // outlines
-  this.group.addChild(
-      drawEllipse(
-      this.x - this.features.eyes.spacing / 2,
-      this.features.eyes.yPos + this.features.eyes.skew,
-      this.features.eyes.size,
-      this.features.eyes.size,
-      "white"
-    )
-  );
-  this.group.addChild(
-    drawEllipse(
-      this.x + this.features.eyes.spacing / 2,
-      this.features.eyes.yPos - this.features.eyes.skew,
-      this.features.eyes.size,
-      this.features.eyes.size,
-      "white"
-    )
-  );
-
-  // pupils
-  this.group.addChild(
-    drawEllipse(
-      this.x - this.features.eyes.spacing / 2,
-      this.features.eyes.yPos + this.features.eyes.skew,
-      this.features.eyes.size * this.features.eyes.pupilSize,
-      this.features.eyes.size * this.features.eyes.pupilSize,
-      "black"
-    )
-  );
-  this.group.addChild(
-    drawEllipse(
-      this.x + this.features.eyes.spacing / 2,
-      this.features.eyes.yPos - this.features.eyes.skew,
-      this.features.eyes.size * this.features.eyes.pupilSize,
-      this.features.eyes.size * this.features.eyes.pupilSize,
-      "black"
-    )
-  );
+  switch (this.features.eyes.type) {
+    case 0:
+      // outlines
+      this.group.addChild(
+          drawEllipse(
+          this.x - this.features.eyes.spacing / 2,
+          this.features.eyes.yPos + this.features.eyes.skew,
+          this.features.eyes.size,
+          this.features.eyes.size,
+          "white"
+        )
+      );
+      this.group.addChild(
+        drawEllipse(
+          this.x + this.features.eyes.spacing / 2,
+          this.features.eyes.yPos - this.features.eyes.skew,
+          this.features.eyes.size,
+          this.features.eyes.size,
+          "white"
+        )
+      );
+      // pupils
+      this.group.addChild(
+        drawEllipse(
+          this.x - this.features.eyes.spacing / 2,
+          this.features.eyes.yPos + this.features.eyes.skew,
+          this.features.eyes.size * this.features.eyes.pupilSize,
+          this.features.eyes.size * this.features.eyes.pupilSize,
+          "black"
+        )
+      );
+      this.group.addChild(
+        drawEllipse(
+          this.x + this.features.eyes.spacing / 2,
+          this.features.eyes.yPos - this.features.eyes.skew,
+          this.features.eyes.size * this.features.eyes.pupilSize,
+          this.features.eyes.size * this.features.eyes.pupilSize,
+          "black"
+        )
+      );
+      break;
+    case 1:
+      this.group.addChild(
+        drawLine(
+          this.x - this.features.eyes.spacing / 2 - this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew,
+          this.x - this.features.eyes.spacing / 2 + this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew,
+        )
+      );
+      this.group.addChild(
+        drawLine(
+          this.x + this.features.eyes.spacing / 2 - this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew,
+          this.x + this.features.eyes.spacing / 2 + this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew,
+        )
+      );
+      break;
+    case 2:
+      this.group.addChild(
+          drawEllipse(
+          this.x - this.features.eyes.spacing / 2,
+          this.features.eyes.yPos + this.features.eyes.skew,
+          this.features.eyes.size,
+          this.features.eyes.size,
+          "black"
+        )
+      );
+      this.group.addChild(
+        drawEllipse(
+          this.x + this.features.eyes.spacing / 2,
+          this.features.eyes.yPos - this.features.eyes.skew,
+          this.features.eyes.size,
+          this.features.eyes.size,
+          "black"
+        )
+      );
+      break;
+    case 3:
+      // left
+      this.group.addChild(
+        drawLine(
+          this.x - this.features.eyes.spacing / 2 - this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew - this.features.eyes.size * 1.5,
+          this.x - this.features.eyes.spacing / 2 + this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew + this.features.eyes.size * 1.5,
+        )
+      );
+      this.group.addChild(
+        drawLine(
+          this.x - this.features.eyes.spacing / 2 - this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew + this.features.eyes.size * 1.5,
+          this.x - this.features.eyes.spacing / 2 + this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew - this.features.eyes.size * 1.5,
+        )
+      );
+      // right
+      this.group.addChild(
+        drawLine(
+          this.x + this.features.eyes.spacing / 2 - this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew - this.features.eyes.size * 1.5,
+          this.x + this.features.eyes.spacing / 2 + this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew + this.features.eyes.size * 1.5,
+        )
+      );
+      this.group.addChild(
+        drawLine(
+          this.x + this.features.eyes.spacing / 2 - this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew + this.features.eyes.size * 1.5,
+          this.x + this.features.eyes.spacing / 2 + this.features.eyes.size * 1.5,
+          this.features.eyes.yPos + this.features.eyes.skew - this.features.eyes.size * 1.5,
+        )
+      );
+      break;
+  }
 }
 
 Face.prototype.generateNose = function() {
@@ -151,7 +238,7 @@ Face.prototype.generateNose = function() {
 }
 
 Face.prototype.drawNose = function() {
-  switch(this.features.nose.type) {
+  switch (this.features.nose.type) {
     case 0:
       this.group.addChild(
         drawLine(
@@ -354,7 +441,7 @@ function drawLine(x1, y1, x2, y2, x3, y3) {
     path.add(delta);
   }
 
-  if(x3 && y3) {
+  if (x3 && y3) {
     for (var i = 0; i < points; i++) {
       var dx = (x2 + (x3 - x2) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 100 - CONFIG.line.roughness / 200);
       var dy = (y2 + (y3 - y2) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 100 - CONFIG.line.roughness / 200);
