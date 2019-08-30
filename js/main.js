@@ -74,6 +74,7 @@ Face.prototype.generate = function() {
   this.generateNose();
   this.generateMouth();
   this.generateEars();
+  this.generateHair();
 }
 
 Face.prototype.draw = function() {
@@ -83,6 +84,7 @@ Face.prototype.draw = function() {
   this.drawEyes();
   this.drawNose(); // nose covers eyes
   this.drawMouth();
+  this.drawHair();
 }
 
 Face.prototype.drawHead = function() {
@@ -366,6 +368,56 @@ Face.prototype.drawEars = function() {
   );
 }
 
+Face.prototype.generateHair = function() {
+  this.features.hair = {};
+  this.features.hair.type = Math.floor(Math.random() * 4);
+}
+
+Face.prototype.drawHair = function() {
+  switch (this.features.hair.type) {
+    case 0:
+      // bald
+      break;
+    case 1:
+      for(var i = 0; i < 30; i++) {
+        this.group.addChild(
+          drawLine(
+            this.x,
+            this.y - this.height * 1.75,
+            this.x + Math.random() * this.width * 2 - this.width,
+            this.y + Math.random() * this.height - this.height * 2.5,
+          )
+        );
+      }
+      break;
+    case 2:
+      for(var i = 0; i < 40; i++) {
+        var xOffset = Math.random() * this.width * 3 - this.width * 1.5;
+        this.group.addChild(
+          drawLine(
+            this.x + xOffset,
+            this.y - this.height * 2 + Math.abs(xOffset) / 2,
+            this.x + xOffset * 1.25 + Math.random() * this.width / 2 - this.width / 4,
+            this.y + Math.random() * this.height * 0.25 - this.height * 2.5 + Math.abs(xOffset) / 3,
+          )
+        );
+      }
+      break;
+    case 3:
+      this.group.addChild(
+          drawClosedArc(
+            this.x,
+            this.y - this.height,
+            this.width * 2,
+            180,
+            380,
+            "#c8c8c8"
+          )
+        );
+      break;
+  }
+}
+
 /* === utility functions === */
 function drawEllipse(x, y, width, height, fill) {
   var points = CONFIG.ellipse.pointsBase + CONFIG.ellipse.pointsVar * Math.random();
@@ -406,6 +458,34 @@ function drawArc(x, y, radius, startAngle, endAngle, fill) {
 
   var path = new paper.Path();
   path.closed = false;
+
+  for (var i = 0; i < points; i++) {
+    var angle = startAngle + i * (endAngle - startAngle) / (points + 0.5);
+    var delta = new paper.Point({
+      length: radius * (1 + Math.random() * CONFIG.ellipse.roughness / 100 - CONFIG.ellipse.roughness / 200),
+      angle: angle
+    });
+
+    path.add(delta.add(center));
+  }
+
+  path.smooth();
+  path.strokeColor = "black";
+  path.strokeWidth = CONFIG.line.strokeWidth;
+  
+  if (fill !== undefined) {
+    path.fillColor = fill;
+  }
+
+  return path;
+}
+
+function drawClosedArc(x, y, radius, startAngle, endAngle, fill) {
+  var points = CONFIG.ellipse.pointsBase + CONFIG.ellipse.pointsVar * Math.random(); // TO DO - use sections proportional to line length
+  var center = new paper.Point(x, y);
+
+  var path = new paper.Path();
+  path.closed = true;
 
   for (var i = 0; i < points; i++) {
     var angle = startAngle + i * (endAngle - startAngle) / (points + 0.5);
