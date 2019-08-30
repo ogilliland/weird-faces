@@ -24,7 +24,7 @@ var CONFIG = {
   line: {
     pointsBase: 4,
     pointsVar: 2,
-    roughness: 15, // percent
+    roughness: 0.25, // percent
     strokeWidth: 1 // px
   }
 };
@@ -39,7 +39,6 @@ function init() {
 
   for (var i = 0; i < COLS; i++) {
     for (var j = 0; j < ROWS; j++) {
-      // drawFace((i + 0.5) * COL_WIDTH, (j + 0.5) * ROW_HEIGHT);
       FACES.push(new Face((i + 0.5) * COL_WIDTH, (j + 0.5) * ROW_HEIGHT));
     }
   }
@@ -81,8 +80,8 @@ Face.prototype.draw = function() {
   this.group.removeChildren(); // clear before re-drawing
   this.drawEars();
   this.drawHead(); // head covers ears
-  this.drawNose();
-  this.drawEyes(); // eyes cover nose
+  this.drawEyes();
+  this.drawNose(); // nose covers eyes
   this.drawMouth();
 }
 
@@ -96,7 +95,7 @@ Face.prototype.generateEyes = function() {
   this.features.eyes = {};
   this.features.eyes.yPos = this.y - Math.random() * this.height;
   this.features.eyes.size = this.width / 8 + Math.random() * this.width / 8;
-  this.features.eyes.spacing = this.width + Math.random() * this.width;
+  this.features.eyes.spacing = this.width * 1.25 + Math.random() * this.width;
   this.features.eyes.skew = Math.random() * this.height / 4 - this.height / 8;
   this.features.eyes.pupilSize = 0.25 + Math.random() * 0.5; // percent as decimal
 }
@@ -145,36 +144,64 @@ Face.prototype.drawEyes = function() {
 
 Face.prototype.generateNose = function() {
   this.features.nose = {};
-  this.features.nose.length = Math.random() * 2 + 2;
-  this.features.nose.skew = Math.random() * this.width / 3 - this.width / 6;
-  this.features.nose.base = Math.floor(Math.random() * 4); // boolean // TO DO - rename to nose.type
-  this.features.nose.spacing = this.height / this.features.nose.length * (0.5 + Math.random() * 0.5); // length of each line segment
+  this.features.nose.type = Math.floor(Math.random() * 4);
+  this.features.nose.size = Math.random() * 15 + 10;
+  this.features.nose.skew = Math.random() * this.width / 2 - this.width / 4;
+  this.features.nose.yPos = Math.max(this.y - this.features.nose.size / 2, this.features.eyes.yPos);
 }
 
 Face.prototype.drawNose = function() {
-  var nose = new paper.Path();
-
-  for (var i = 0; i < this.features.nose.length; i++) {
-    var dx = this.x + this.features.nose.skew * 2 * (1 + Math.random() * CONFIG.ellipse.roughness / 100 - CONFIG.ellipse.roughness / 200);
-    var dy = this.features.eyes.yPos + i * this.features.nose.spacing;
-
-    var delta = new paper.Point(dx, dy);
-    nose.add(delta);
+  switch(this.features.nose.type) {
+    case 0:
+      this.group.addChild(
+        drawLine(
+          this.x + this.features.nose.skew,
+          this.features.nose.yPos,
+          this.x + this.features.nose.skew,
+          this.features.nose.yPos + this.features.nose.size
+        )
+      );
+      break;
+    case 1:
+      this.group.addChild(
+        drawLine(
+          this.x + this.features.nose.skew * 2,
+          this.features.nose.yPos,
+          this.x + this.features.nose.skew * 2,
+          this.features.nose.yPos + this.features.nose.size,
+          this.x,
+          this.features.nose.yPos + this.features.nose.size
+        )
+      );
+      this.group.lastChild.fillColor = "white";
+      break;
+    case 2:
+      this.group.addChild(
+        drawArc(
+          this.x,
+          Math.max(this.y, this.features.eyes.yPos),
+          this.features.nose.size / 2,
+          this.features.nose.skew * 90 * 4 / this.width,
+          this.features.nose.skew * 90 * 4 / this.width + 180,
+          "white"
+        )
+      );
+      break;
+    case 3:
+      this.group.addChild(
+        drawPoint(
+          this.x + this.features.nose.skew / 4 + 4,
+          this.y + this.features.nose.skew / 4
+        )
+      );
+      this.group.addChild(
+        drawPoint(
+          this.x - this.features.nose.skew / 4 - 4,
+          this.y - this.features.nose.skew / 4
+        )
+      );
+      break;
   }
-
-  if(this.features.nose.base > 0) {
-    var dx = this.x + -1 * this.features.nose.skew;
-    var dy = this.features.eyes.yPos + this.features.nose.length * this.features.nose.spacing;
-
-    var delta = new paper.Point(dx, dy);
-    nose.add(delta);
-  }
-
-  nose.smooth();
-  nose.strokeColor = "black";
-  nose.strokeWidth = CONFIG.line.strokeWidth;
-
-  this.group.addChild(nose);
 }
 
 Face.prototype.generateMouth = function() {
@@ -286,22 +313,66 @@ function drawEllipse(x, y, width, height, fill) {
   return path;
 }
 
-function drawLine(x1, y1, x2, y2) {
-  var points = CONFIG.line.pointsBase + CONFIG.line.pointsVar * Math.random();
+function drawArc(x, y, radius, startAngle, endAngle, fill) {
+  var points = CONFIG.ellipse.pointsBase + CONFIG.ellipse.pointsVar * Math.random(); // TO DO - use sections proportional to line length
+  var center = new paper.Point(x, y);
+
+  var path = new paper.Path();
+  path.closed = false;
+
+  for (var i = 0; i < points; i++) {
+    var angle = startAngle + i * (endAngle - startAngle) / (points + 0.5);
+    var delta = new paper.Point({
+      length: radius * (1 + Math.random() * CONFIG.ellipse.roughness / 100 - CONFIG.ellipse.roughness / 200),
+      angle: angle
+    });
+
+    path.add(delta.add(center));
+  }
+
+  path.smooth();
+  path.strokeColor = "black";
+  path.strokeWidth = CONFIG.line.strokeWidth;
+  
+  if (fill !== undefined) {
+    path.fillColor = fill;
+  }
+
+  return path;
+}
+
+function drawLine(x1, y1, x2, y2, x3, y3) {
+  var points = CONFIG.line.pointsBase + CONFIG.line.pointsVar * Math.random(); // TO DO - use sections proportional to line length
 
   var path = new paper.Path();
 
   for (var i = 0; i < points; i++) {
-    var dx = (x1 + (x2 - x1) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 5000 - CONFIG.line.roughness / 10000); // TO DO - fix these ratios
-    var dy = (y1 + (y2 - y1) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 5000 - CONFIG.line.roughness / 10000); // ***
+    var dx = (x1 + (x2 - x1) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 100 - CONFIG.line.roughness / 200);
+    var dy = (y1 + (y2 - y1) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 100 - CONFIG.line.roughness / 200);
 
     var delta = new paper.Point(dx, dy);
     path.add(delta);
+  }
+
+  if(x3 && y3) {
+    for (var i = 0; i < points; i++) {
+      var dx = (x2 + (x3 - x2) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 100 - CONFIG.line.roughness / 200);
+      var dy = (y2 + (y3 - y2) * i / points) * (1 + Math.random() * CONFIG.line.roughness / 100 - CONFIG.line.roughness / 200);
+
+      var delta = new paper.Point(dx, dy);
+      path.add(delta);
+    }
   }
 
   path.smooth();
   path.strokeColor = "black";
   path.strokeWidth = CONFIG.line.strokeWidth;
 
+  return path;
+}
+
+function drawPoint(x, y) {
+  var path = new paper.Path.Circle(new paper.Point(x, y), CONFIG.line.strokeWidth);
+  path.fillColor = "black";
   return path;
 }
