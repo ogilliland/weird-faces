@@ -3,8 +3,8 @@ var canvas, paper;
 var WIDTH = 1000;
 var HEIGHT = 1000;
 
-var ROWS = 6;
-var COLS = 8;
+var ROWS = 4;
+var COLS = 5;
 
 var ROW_HEIGHT = HEIGHT / ROWS;
 var COL_WIDTH = WIDTH / COLS;
@@ -25,7 +25,7 @@ var CONFIG = {
     pointsBase: 4,
     pointsVar: 2,
     roughness: 0.25, // percent
-    strokeWidth: 1 // px
+    strokeWidth: 2 // px
   }
 };
 
